@@ -10,7 +10,7 @@
       in {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            julia
+            julia-lts
           ];
         };
       }
