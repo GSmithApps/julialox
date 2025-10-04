@@ -1,13 +1,13 @@
 # Function to accurately count the number of trailing spaces.
 # This mimics finding the 'numSpacesToRight' in your pseudocode.
-function get_trailing_spaces(line::AbstractString)::Int
+function get_trailing_spaces_for_start(line::AbstractString)::Int
     # we pretend trailing '/' and "|" are spaces when calculating the
     # number of trailing spaces. We achieve this by replacing the first structural 
     # brace with a space character for the purpose of calculating the right-justification count.
     
     # Find the index of the first '/' (which is the one replaced in the main function).
-    brace_index = findfirst('/', line)
-    pipe_index = findfirst('|', line)
+    brace_index = findlast('/', line)
+    pipe_index = findlast('|', line)
     
     if !isnothing(brace_index)
         # Create a temporary line where the structural brace is replaced by a single space.
@@ -46,13 +46,13 @@ function process_lines_of_source_code(
     # 1. Pop the current line and determine its trailing spaces.
     current_line = popfirst!(stack_of_remaining_lines)
 
-    if last(rstrip(current_line))  ∉ ['/', '|']
+    if strip(current_line) == "" || last(rstrip(current_line))  ∉ ['/', '|']
         return process_lines_of_source_code(stack_of_remaining_lines, new_source_code, previous_line_trailing_spaces)
     end
     
     # currentLineStart corresponds to the number of trailing spaces on the current line.
     # This now includes the contribution of the structural brace.
-    current_line_trailing_spaces = get_trailing_spaces(current_line) 
+    current_line_trailing_spaces = get_trailing_spaces_for_start(current_line) 
     
     # 2. Calculate the number of new opening parentheses to add (numOpenParenthesis).
     # Note: We use max(0, ...) to ensure we only add parentheses when the trailing 
@@ -77,7 +77,11 @@ function process_lines_of_source_code(
     new_source_code_accumulator = new_source_code * open_parens_string * transformed_line * (isempty(stack_of_remaining_lines) ? "" : "\n")
     
     # 5. Set the new 'previousLineEnd' (numSpacesToRight) for the next call.
-    next_previous_line_trailing_spaces = length(current_line) - length(rstrip(current_line))
+    next_previous_line_trailing_spaces = length(current_line) - length(rstrip(transformed_line))
+
+    println("")
+    println(current_line)
+    println("next line trailing spaces: " * string(next_previous_line_trailing_spaces))
     
     # 6. Recurse.
     return process_lines_of_source_code(
@@ -118,6 +122,9 @@ sample_code_right_justified = [
             "Grant |  ",
                 "+ /  ",
               "print /",
+        "Hey grant sup",
+                     "",
+                "     ",
                 "2 |  ",
                 "3 |  ",
                 "+ /  ",
