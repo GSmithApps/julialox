@@ -1,17 +1,20 @@
 # Function to accurately count the number of trailing spaces.
 # This mimics finding the 'numSpacesToRight' in your pseudocode.
 function get_trailing_spaces(line::AbstractString)::Int
-    # The pseudocode requires that we "pretend '\{' is a space" when calculating the
+    # we pretend trailing '/' and "|" are spaces when calculating the
     # number of trailing spaces. We achieve this by replacing the first structural 
     # brace with a space character for the purpose of calculating the right-justification count.
     
-    # Find the index of the first '{' (which is the one replaced in the main function).
-    brace_index = findfirst('{', line)
+    # Find the index of the first '/' (which is the one replaced in the main function).
+    brace_index = findfirst('/', line)
+    pipe_index = findfirst('|', line)
     
     if !isnothing(brace_index)
         # Create a temporary line where the structural brace is replaced by a single space.
         # This ensures the brace contributes to the "trailing space" count.
         temp_line = string(line[1:brace_index-1], " ", line[brace_index+1:end])
+    elseif !isnothing(pipe_index)
+        temp_line = string(line[1:pipe_index-1], " ", line[pipe_index+1:end])
     else
         # If no brace exists, use the line as is.
         temp_line = line
@@ -27,7 +30,7 @@ Recursively processes lines of code from a stack based on trailing space differe
 
 The logic compares the trailing spaces of the current line to the previous line.
 An increase in trailing spaces (assumed 2 spaces per level) is converted into
-leading opening parentheses. The first '{' is replaced with a ')'.
+leading opening parentheses. The first '/' is replaced with a ')'.
 """
 function process_lines_of_source_code(
     stack_of_remaining_lines::Vector{String}, 
@@ -39,9 +42,13 @@ function process_lines_of_source_code(
     if isempty(stack_of_remaining_lines)
         return new_source_code
     end
-
+    
     # 1. Pop the current line and determine its trailing spaces.
     current_line = popfirst!(stack_of_remaining_lines)
+
+    if last(rstrip(current_line))  ∉ ['/', '|']
+        return process_lines_of_source_code(stack_of_remaining_lines, new_source_code, previous_line_trailing_spaces)
+    end
     
     # currentLineStart corresponds to the number of trailing spaces on the current line.
     # This now includes the contribution of the structural brace.
@@ -56,8 +63,12 @@ function process_lines_of_source_code(
     num_open_parenthesis = max(0, floor(Int, trailing_space_increase / 2))
 
     # 3. Transform the line content.
-    # Replace the first occurrence of "{" with ")".
-    transformed_line = replace(current_line, "{" => ")", count=1)
+    # Replace the first occurrence of "/" with ")" and "|"with " "
+    if last(rstrip(current_line)) == '/'
+        transformed_line = replace(current_line, "/" => ")", count=1)
+    else
+        transformed_line = replace(current_line, "|" => " ", count=1)
+    end
     
     # 4. Accumulate the new source code (newSourceCode).
     open_parens_string = repeat("( ", num_open_parenthesis)
@@ -92,25 +103,28 @@ end
 
 # Example 1: Original prompt example (with no trailing spaces, so no parens are added)
 println("Example 1: Original Prompt")
-processLinesOfSourceCode(["hello |", "world /"], "", 0)
+processLinesOfSourceCode([
+    "hello |",
+    "world /"
+], "", 0)
 
 # Example 2: Illustrating Trailing Space Logic
 # Note: The processing is LIFO, so "Level 3" is processed first, compared to 0 trailing spaces.
 sample_code_right_justified = [
-    "Line 1: Level 1  ",       # 1 physical space + 1 brace = 2 effective spaces
-    "Line 2: Level 2  ",  # 3 physical spaces + 1 brace = 4 effective spaces
-    "Line 3: Level 3 {",   # 6 physical spaces + 0 brace = 6 effective spaces
-               "Hi    ",
-            "Grant    ",
-                "+ {  ",
-              "print {",
-                "2    ",
-                "3    ",
-                "+ {  ",
-                "2    ",
-                "3    ",
-                "+ {  ",
-                  "+ {",
+    "Line 1: Level 1 |",       # 1 physical space + 1 brace = 2 effective spaces
+    "Line 2: Level 2 |",  # 3 physical spaces + 1 brace = 4 effective spaces
+    "Line 3: Level 3 /",   # 6 physical spaces + 0 brace = 6 effective spaces
+               "Hi |  ",
+            "Grant |  ",
+                "+ /  ",
+              "print /",
+                "2 |  ",
+                "3 |  ",
+                "+ /  ",
+                "2 |  ",
+                "3 |  ",
+                "+ /  ",
+                  "+ /",
 ]
 
 println("\nExample 2: Right-Justified Structure (Updated with Brace-as-Space Logic)")
