@@ -26,28 +26,28 @@ function get_trailing_spaces_for_start(line::AbstractString)::Int
 end
 
 """
-Recursively processes lines of code from a stack based on trailing space difference.
+Recursively processes lines of code from a vector based on trailing space difference.
 
 The logic compares the trailing spaces of the current line to the previous line.
 An increase in trailing spaces (assumed 2 spaces per level) is converted into
 leading opening parentheses. The first '/' is replaced with a ')'.
 """
 function process_lines_of_source_code(
-    stack_of_remaining_lines::Vector{String}, 
+    vector_of_remaining_lines::Vector{String}, 
     new_source_code::String, 
     previous_line_trailing_spaces::Int # Corresponds to previousLineEnd
 )::String
     
     # Base Case
-    if isempty(stack_of_remaining_lines)
+    if isempty(vector_of_remaining_lines)
         return new_source_code
     end
     
     # 1. Pop the current line and determine its trailing spaces.
-    current_line = popfirst!(stack_of_remaining_lines)
+    current_line = popfirst!(vector_of_remaining_lines)
 
     if strip(current_line) == "" || last(rstrip(current_line))  ∉ ['/', '|']
-        return process_lines_of_source_code(stack_of_remaining_lines, new_source_code, previous_line_trailing_spaces)
+        return process_lines_of_source_code(vector_of_remaining_lines, new_source_code, previous_line_trailing_spaces)
     end
     
     # currentLineStart corresponds to the number of trailing spaces on the current line.
@@ -74,31 +74,26 @@ function process_lines_of_source_code(
     open_parens_string = repeat("( ", num_open_parenthesis)
     
     # Append the new structure to the accumulator, adding a newline for clarity.
-    new_source_code_accumulator = new_source_code * open_parens_string * transformed_line * (isempty(stack_of_remaining_lines) ? "" : "\n")
+    new_source_code_accumulator = new_source_code * open_parens_string * transformed_line * (isempty(vector_of_remaining_lines) ? "" : "\n")
     
     # 5. Set the new 'previousLineEnd' (numSpacesToRight) for the next call.
     next_previous_line_trailing_spaces = length(current_line) - length(rstrip(transformed_line))
 
-    println("")
-    println(current_line)
-    println("next line trailing spaces: " * string(next_previous_line_trailing_spaces))
-    
     # 6. Recurse.
     return process_lines_of_source_code(
-        stack_of_remaining_lines, 
+        vector_of_remaining_lines, 
         new_source_code_accumulator, 
         next_previous_line_trailing_spaces
     )
 end
 
 # Wrapper function for a clean initial call and demonstration.
-function processLinesOfSourceCode(lines::Vector{String}, initial_source_code::String, initial_end::Int)
-    # Create a mutable copy of the input lines since pop! modifies it in place (LIFO stack behavior).
+function processLinesOfSourceCode(lines::Vector{String})
     stack_copy = copy(lines)
     
     println("--- Transformation Output: ---\n")
-    result = process_lines_of_source_code(stack_copy, initial_source_code, initial_end)
-    print(result)
+    result = process_lines_of_source_code(stack_copy, "", 0)
+    println(result)
     # open("result.txt", "w") do io
     #     print(io, result) # Writes "First line.\n"
     # end
@@ -110,32 +105,34 @@ println("Example 1: Original Prompt")
 processLinesOfSourceCode([
     "hello |",
     "world /"
-], "", 0)
+])
 
-# Example 2: Illustrating Trailing Space Logic
-# Note: The processing is LIFO, so "Level 3" is processed first, compared to 0 trailing spaces.
 sample_code_right_justified = [
-    "Line 1: Level 1 |",       # 1 physical space + 1 brace = 2 effective spaces
-    "Line 2: Level 2 |",  # 3 physical spaces + 1 brace = 4 effective spaces
-    "Line 3: Level 3 /",   # 6 physical spaces + 0 brace = 6 effective spaces
-               "Hi |  ",
-            "Grant |  ",
-                "+ /  ",
-              "print /",
-        "Hey grant sup",
-                     "",
-                "     ",
-                "2 |  ",
-                "3 |  ",
-                "+ /  ",
-                "2 |  ",
-                "3 |  ",
-                "+ /  ",
-                  "+ /",
+                               "",
+"this file does some cool stuff!",
+                               "",
+              "Line 1: Level 1 |",
+              "Line 2: Level 2 |",
+              "Line 3: Level 3 /",
+                         "Hi |  ",
+                      "Grant |  ",
+                          "+ /  ",
+                        "print /",
+                               "",
+                  "Hey grant sup",
+                               "",
+                          "     ",
+                          "2 |  ",
+                          "3 |  ",
+                          "+ /  ",
+                          "2 |  ",
+                          "3 |  ",
+                          "+ /  ",
+                            "+ /",
 ]
 
 println("\nExample 2: Right-Justified Structure (Updated with Brace-as-Space Logic)")
-res = processLinesOfSourceCode(sample_code_right_justified, "", 0)
+res = processLinesOfSourceCode(sample_code_right_justified)
 
 solution = join([
   "( Line 1: Level 1  ",
