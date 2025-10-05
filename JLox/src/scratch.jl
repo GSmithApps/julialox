@@ -18,7 +18,7 @@ function process_lines_of_source_code(
 
     current_line = popfirst!(vector_of_remaining_lines)
 
-    if strip(current_line) == "" || last(lstrip(current_line))  ∉ ['|']
+    if strip(current_line) == "" || first(lstrip(current_line))  ∉ ['|']
         return process_lines_of_source_code(vector_of_remaining_lines, new_source_code, previous_line_leading_spaces)
     end
 
@@ -33,8 +33,8 @@ function process_lines_of_source_code(
 
     # 3. Transform the line content.
     # Replace the first occurrence of "/" with ")" and "|"with " "
-    if last(rstrip(current_line)) == '/'
-        transformed_line = replace(current_line, "/" => ")", count=1)
+    if first(lstrip(current_line)) == '/'
+        transformed_line = replace(current_line, "/" => "(", count=1)
     else
         transformed_line = replace(current_line, "|" => " ", count=1)
     end
