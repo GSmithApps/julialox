@@ -1,3 +1,20 @@
+function get_next_line!(vector_of_remaining_lines::Vector{String},)::Union{String, Nothing}
+
+    # Base Case
+    if isempty(vector_of_remaining_lines)
+        return nothing
+    end
+
+    current_line = popfirst!(vector_of_remaining_lines)
+
+    if strip(current_line) == "" || first(lstrip(current_line))  ∉ ['|']
+        return get_next_line!(vector_of_remaining_lines)
+    end
+
+    return current_line
+
+end
+
 """
 Recursively processes lines of code from a vector based on trailing space difference.
 
@@ -7,51 +24,47 @@ leading opening parentheses. The first '/' is replaced with a ')'.
 """
 function process_lines_of_source_code(
     vector_of_remaining_lines::Vector{String},
+    line_to_process::String,
     new_source_code::String,
-    previous_line_leading_spaces::Int
 )::String
 
-    # Base Case
-    if isempty(vector_of_remaining_lines)
+    next_line = get_next_line!(vector_of_remaining_lines)
+
+    if isnothing(next_line)
         return new_source_code
     end
 
-    current_line = popfirst!(vector_of_remaining_lines)
+    current_line_with_leading_pipe_removed = replace(line_to_process, "|" => " ", count=1)
+    next_line_with_leading_pipe_removed = replace(next_line, "|" => " ", count=1)
 
-    if strip(current_line) == "" || first(lstrip(current_line))  ∉ ['|']
-        return process_lines_of_source_code(vector_of_remaining_lines, new_source_code, previous_line_leading_spaces)
-    end
+    # current_line_leading_spaces counts the number of leading spaces up to the actual characters...
+    # but remember that the front pipe is removed. So it's like the following:
+    # Something like "| / hi" has two leading spaces
+    current_line_leading_spaces = length(current_line_with_leading_pipe_removed) - length(lstrip(replace(current_line_with_leading_pipe_removed, "/ " => "  ")))
+    next_line_leading_spaces = length(next_line_with_leading_pipe_removed) - length(lstrip(next_line_with_leading_pipe_removed))
 
-    current_line_leading_spaces = length(current_line) - length(lstrip(current_line))
-    
-    # good til here
-
-    leading_space_decrease = previous_line_leading_spaces - current_line_leading_spaces
+    leading_space_decrease = current_line_leading_spaces - next_line_leading_spaces
 
     # Calculate the number of structure-opening parentheses, assuming 2 spaces per step.
     num_close_parenthesis = max(0, floor(Int, leading_space_decrease / 2))
 
     # 3. Transform the line content.
     # Replace the first occurrence of "/" with ")" and "|"with " "
-    if first(lstrip(current_line)) == '/'
-        transformed_line = replace(current_line, "/" => "(", count=1)
-    else
-        transformed_line = replace(current_line, "|" => " ", count=1)
-    end
+    transformed_line = replace(current_line_with_leading_pipe_removed, "/" => "(", count=1)
 
     # 4. Accumulate the new source code (newSourceCode).
-    open_parens_string = repeat("( ", num_close_parenthesis)
+    close_parens_string = repeat(" )", num_close_parenthesis)
 
     # Append the new structure to the accumulator, adding a newline for clarity.
-    new_source_code_accumulator = new_source_code * open_parens_string * transformed_line * (isempty(vector_of_remaining_lines) ? "" : "\n")
+    new_source_code_accumulator = new_source_code * transformed_line * close_parens_string * "\n"
 
     # previous line leading spaces needs to be calculated based on the "/"
 
     # 6. Recurse.
     return process_lines_of_source_code(
         vector_of_remaining_lines,
+        next_line,
         new_source_code_accumulator,
-        current_line_leading_spaces
     )
 end
 
@@ -59,9 +72,9 @@ end
 function processLinesOfSourceCode(lines::Vector{String})
     stack_copy = copy(lines)
 
-    println("--- Transformation Output: ---\n")
-    result = process_lines_of_source_code(stack_copy, "", -2)
-    println(result)
+    first_line = get_next_line!(stack_copy)
+
+    result = process_lines_of_source_code(stack_copy, first_line, "")
     return result
 end
 
@@ -73,7 +86,13 @@ function processSourceCode(sourceCode::String)
 end
 
 
-"""
+exampleSource = """
+| / print
+  | "hi"
+
+| / print
+  | / + "hi" "grant"
+
 | / defun
   | / factorial n
   | / if
@@ -84,12 +103,10 @@ end
       | / factorial
         | / - n 1
 
-| / print
-  | "hi"
 
-| / print
-  | / + "hi" "grant"
+|
 
 """
 
+println(processSourceCode(exampleSource))
 
