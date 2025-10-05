@@ -85,30 +85,11 @@ function processSourceCode(sourceCode::String)
 
 end
 
+source = read("example.mlg", String)
 
-exampleSource = """
+output = processSourceCode(source)
 
-
-| / print
-  | "hi"
-
-| / print
-  | / + "hi" "grant"
-
-| / defun
-  | / factorial n
-  | / if
-    | / <= n 1
-    | 1
-    | / *
-      | n
-      | / factorial
-        | / - n 1
-
-
-|
-
-"""
-
-println(processSourceCode(exampleSource))
+open("transpiled.txt", "w") do io
+    print(io, output) # Writes "First line.\n"
+end
 
