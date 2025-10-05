@@ -1,0 +1,8 @@
+
+
+open("solution.txt", "w") do io
+    print(io, solution) # Writes "First line.\n"
+end
+
+
+println(res == solution)
