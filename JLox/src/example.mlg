@@ -21,4 +21,8 @@ And some more English text!!!
 
 | / factorial 2
 
+Also, the syntax highlighter needs to work too
+
+| / defun ( factorial n ) / if ( <= n 1 ) 1 / * n / factorial / - n 1
+
 |

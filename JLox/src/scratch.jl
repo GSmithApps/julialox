@@ -45,12 +45,14 @@ function process_lines_of_source_code(
 
     leading_space_decrease = current_line_leading_spaces - next_line_leading_spaces
 
+    num_slashes_in_current_line = count("/ ", current_line_with_leading_pipe_removed)
+
     # Calculate the number of structure-opening parentheses, assuming 2 spaces per step.
-    num_close_parenthesis = max(0, floor(Int, leading_space_decrease / 2))
+    num_close_parenthesis = max(0, floor(Int, leading_space_decrease / 2)) + max(0, num_slashes_in_current_line - 1)
 
     # 3. Transform the line content.
     # Replace the first occurrence of "/" with ")" and "|"with " "
-    transformed_line = replace(current_line_with_leading_pipe_removed, "/" => "(", count=1)
+    transformed_line = replace(current_line_with_leading_pipe_removed, "/" => "(")
 
     # 4. Accumulate the new source code (newSourceCode).
     close_parens_string = repeat(" )", num_close_parenthesis)
