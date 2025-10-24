@@ -1,0 +1,56 @@
+
+
+token is an abstract type. 
+
+number is a type that is a subtype of token. it is just an integer
+
+plus_sign is another type that is a subtype of token. there's really nothing to it -- it just is what it is, like an atom.
+
+
+def parse(remaining_source: string, mid_progress_string: string, list_of_tokens: list<tokens>) -> list<tokens>
+
+    split remaining source into the next character and subsequent_source
+
+    is the next character a digit?
+
+        return parse(subsequent_source, mid_progress_string + next_char, list_of_tokens)
+
+    is the mid_progress_string empty?
+
+        is the next character the end of the file
+
+            return list_of_tokens
+
+        is the next character whitespace?
+
+            return parse(subsequent_source, "", list_of_tokens)
+
+        is the next character a plus?
+
+            return parse(subsequent_source, "", list_of_tokens + plus_sign)
+
+        else
+
+            problem
+
+    else
+
+        is the next character the end of the file?
+
+            # current token is done. We want to end it, and pass
+
+            make into a token
+
+            return list_of_tokens + current_token
+
+        is the next character whitespace?
+
+            # current token is done. We want to end it, and pass
+
+            break off the current token into a new variable
+
+            return parse(remaining_source, "", list_of_tokens + current_token)
+
+        else
+
+            problem
