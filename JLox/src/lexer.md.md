@@ -8,7 +8,7 @@ This tiny lexer tokenizes an ultra-simple language:
 
 ## Grammar (informal)
 
-```
+```text
 Expr  := Num (WS "+" WS Num)* WS?
 Num   := [0-9]+
 WS    := one or more Unicode whitespace chars
@@ -71,9 +71,10 @@ These tests avoid defining `==` for tokens by comparing a simplified tuple view.
   ```julia
   julia> include("lexer.jl"); include("runtests.jl")
   ```
+
 * With Pkg test layout:
 
-  ```
+  ```text
   Project
   ├─ src/lexer.jl
   └─ test/runtests.jl
