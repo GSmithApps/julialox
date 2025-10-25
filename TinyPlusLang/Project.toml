@@ -1,0 +1,11 @@
+name = "TinyPlusLang"
+uuid = "819b5a92-6ee3-4218-85e0-4711715bb19a"
+authors = ["Grant Smith <14.gsmith.14@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+# no external deps yet
+
+[compat]
+julia = "1.10"
+
