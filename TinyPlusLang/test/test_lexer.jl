@@ -1,3 +1,5 @@
+# These tests avoid defining `==` for tokens by comparing a simplified tuple view.
+
 using Test
 
 # bring the lexer into scope (adjust the include path as needed)

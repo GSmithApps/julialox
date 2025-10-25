@@ -58,30 +58,3 @@ The implementation uses `firstindex`/`nextind`, so it’s safe on Unicode string
 ### Performance note
 
 The function is recursive for clarity. Julia doesn’t guarantee tail-call elimination; for extremely long inputs, consider a loop-based rewrite.
-
-## Tests
-
-I have some tests in sketch-test.jl, but I should probably save them as as `runtests.jl` or include under `test/` if you’re using Pkg’s test runner.
-These tests avoid defining `==` for tokens by comparing a simplified tuple view.
-
-### Running
-
-* Quick ad-hoc run:
-
-  ```julia
-  julia> include("lexer.jl"); include("runtests.jl")
-  ```
-
-* With Pkg test layout:
-
-  ```text
-  Project
-  ├─ src/lexer.jl
-  └─ test/runtests.jl
-  ```
-
-  then:
-
-  ```julia
-  ] test
-  ```
